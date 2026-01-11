@@ -1,143 +1,72 @@
 %{
+#include "t.tab.h"
 #include <iostream>
-#include <string>
 using namespace std;
 
 int line_no = 1;
-int token_count = 0;
 %}
 
-%option noyywrap
+%%
+
+
+"//"[^\n]*              { return COMMENT; }
+"/\\*"([^*]|\*+[^*/])*\*+"/" { return COMMENT; }
+
+
+"func"|"num"|"decil"|"txt"|"booll"|"charac" { return DATATYPE; }
+
+
+"ifx"   { return IFX; }
+"elx"   { return ELX; }
+"wloop" { return WLOOP; }
+"show"  { return SHOW; }
+"take"  { return TAKE; }
+
+
+"yes"|"no"          { return BOOL_LITERAL; }
+[0-9]+\.[0-9]+      { return FLOAT_LITERAL; }
+[0-9]+              { return INT_LITERAL; }
+`[^`]*`             { return STRING_LITERAL; }
+\|.\|               { return CHAR_LITERAL; }
+
+
+"::"                { return ASSIGN_OP; }
+"=="|"!="|"<"|">"   { return REL_OP; }
+
+
+";;"  { return ENDLINE; }
+"(("  { return GROUP_START; }
+"))"  { return GROUP_END; }
+"{{"  { return BLOCK_START; }
+"}}"  { return BLOCK_END; }
+
+
+@[_a-zA-Z][_a-zA-Z0-9]* { return IDENTIFIER; }
+
+
+[ \t\r]+  { }
+\n        { line_no++; }
+
+
+. {
+    cout << "Syntax Error at line " << line_no
+         << ": syntax error '" << yytext[0] << "'" << endl;
+}
 
 %%
 
-"/\\"([^\\]|\\n)*"/\\" {
-    token_count++;
-    cout << "[Line " << line_no << " | Token " << token_count << "] "
-         << "COMMENT (multi-line)\t" << yytext << endl;
-}
+int yywrap() { return 1; }
 
-\/\/[^\n]* {
-    token_count++;
-    cout << "[Line " << line_no << " | Token " << token_count << "] "
-         << "COMMENT (single-line)\t" << yytext << endl;
-}
+int main()
+{
+    cout << "\nNEO++ LEXICAL ANALYZER STARTED\n";
 
+    while (yylex() != 0)
+        ;   
 
-"func"|"num"|"decil"|"txt"|"booll"|"charac"|"arr"|"struc" {
-    token_count++;
-    cout << "[Line " << line_no << " | Token " << token_count << "] "
-         << "DATATYPE\t\t" << yytext << endl;
-}
-
-"ifx"|"elx"|"wloop"|"dwloop"|"floop"|"ret"|"show"|"take"|"giveback" {
-    token_count++;
-    cout << "[Line " << line_no << " | Token " << token_count << "] "
-         << "KEYWORD\t\t" << yytext << endl;
-}
-
-
-"yes"|"no" {
-    token_count++;
-    cout << "[Line " << line_no << " | Token " << token_count << "] "
-         << "BOOLEAN LITERAL\t" << yytext << endl;
-}
-
-
-"::"|"++"|"--"|"**"|"~"|"=\?"|"&&&"|"!"|"**" {
-    token_count++;
-    cout << "[Line " << line_no << " | Token " << token_count << "] "
-         << "OPERATOR\t\t" << yytext << endl;
-}
-
-
-":" {
-    token_count++;
-    cout << "[Line " << line_no << " | Token " << token_count << "] "
-         << "PUNCTUATION (colon)\t" << yytext << endl;
-}
-";;" {
-    token_count++;
-    cout << "[Line " << line_no << " | Token " << token_count << "] "
-         << "PUNCTUATION (endline)\t" << yytext << endl;
-}
-"." {
-    token_count++;
-    cout << "[Line " << line_no << " | Token " << token_count << "] "
-         << "PUNCTUATION (separator)\t" << yytext << endl;
-}
-"((" {
-    token_count++;
-    cout << "[Line " << line_no << " | Token " << token_count << "] "
-         << "GROUP START ((\t" << yytext << endl;
-}
-"))" {
-    token_count++;
-    cout << "[Line " << line_no << " | Token " << token_count << "] "
-         << "GROUP END ))\t" << yytext << endl;
-}
-"{{" {
-    token_count++;
-    cout << "[Line " << line_no << " | Token " << token_count << "] "
-         << "BLOCK START {{\t" << yytext << endl;
-}
-"}}" {
-    token_count++;
-    cout << "[Line " << line_no << " | Token " << token_count << "] "
-         << "BLOCK END }}\t" << yytext << endl;
-}
-
-
-[0-9]+\.[0-9]+ {
-    token_count++;
-    cout << "[Line " << line_no << " | Token " << token_count << "] "
-         << "FLOAT LITERAL\t" << yytext << endl;
-}
-
-[0-9]+ {
-    token_count++;
-    cout << "[Line " << line_no << " | Token " << token_count << "] "
-         << "INTEGER LITERAL\t" << yytext << endl;
-}
-
-`[^`]*` {
-    token_count++;
-    cout << "[Line " << line_no << " | Token " << token_count << "] "
-         << "STRING LITERAL\t" << yytext << endl;
-}
-
-\|.\| {
-    token_count++;
-    cout << "[Line " << line_no << " | Token " << token_count << "] "
-         << "CHARACTER LITERAL\t" << yytext << endl;
-}
-
-
-@[_a-zA-Z][_a-zA-Z0-9]* {
-    token_count++;
-    cout << "[Line " << line_no << " | Token " << token_count << "] "
-         << "IDENTIFIER\t\t" << yytext << endl;
-}
-
-
-[ \t\r]+    {  }
-\n          { line_no++; }
-
-
-. { /* */ }
-
-%%
-
-int main() {
-    cout << "\n NEO++ LEXICAL ANALYZER \n";
-    cout << "Analyzing tokens with live counts...\n\n";
-
-    yylex();
-
-   
-    cout << "Total Tokens Recognized: " << token_count << endl;
-    cout << "Total Lines Scanned: " << line_no << endl;
-    
+    cout << "\nLexical analysis completed." << endl;
+    cout << "Total lines scanned: " << line_no << endl;
 
     return 0;
 }
+
